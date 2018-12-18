@@ -91,6 +91,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         alien.run(SKAction.sequence(actionArray))
     }
     
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        fireTorpedo()
+    }
+    
     func fireTorpedo(){
         self.run(SKAction.playSoundFileNamed("torpedo.mp3", waitForCompletion: false))
         let torpedoNode = SKSpriteNode(imageNamed: "torpedo")
@@ -106,9 +110,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         self.addChild(torpedoNode)
         
-        let animationDuration:TimeInterval = 0.3
+        let animationDuration:TimeInterval = 0.5
         
         var actionArray = [SKAction]()
+        
+        actionArray.append(SKAction.move(to: CGPoint(x: player.position.x, y: self.frame.size.height + 10 ), duration: animationDuration))
+        actionArray.append(SKAction.removeFromParent())
+        torpedoNode.run(SKAction.sequence(actionArray))
     }
     
     
