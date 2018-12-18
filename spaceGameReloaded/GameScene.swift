@@ -12,6 +12,8 @@ import CoreMotion
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
+    var activeGame = false
+    
     var bounds = UIScreen.main.bounds
     
     var starfield:SKEmitterNode!
@@ -33,11 +35,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     let alienCategory:UInt32 = 0x1 << 1
     let photonTorpedoCategory:UInt32 = 0x1 << 0
+    let spaceShipCategory: UInt32 = 0x1 << 2
     
     let motionManager = CMMotionManager()
     var xAcceleration:CGFloat = 0
     
     override func didMove(to view: SKView) {
+        activeGame = true
+        
         height = self.bounds.size.height
         width = self.bounds.size.width
 
@@ -52,6 +57,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.size.height = player.size.height * 2
         player.size.width = player.size.width * 2
         player.position = CGPoint(x: 0, y: height / -1.25)
+        
+        
+        player.physicsBody = SKPhysicsBody(rectangleOf: player.size)
+        player.physicsBody?.isDynamic = true
+        
+        player.physicsBody?.categoryBitMask = spaceShipCategory
+        player.physicsBody?.contactTestBitMask = alienCategory
+        player.physicsBody?.collisionBitMask = 0
+        
+        
         self.addChild(player)
         
         self.physicsWorld.gravity = CGVector(dx: 0, dy: 0)
@@ -112,7 +127,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        fireTorpedo()
+        if (activeGame) {
+            fireTorpedo()
+        }
     }
     
     func fireTorpedo(){
@@ -155,11 +172,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         if ((firstBody.categoryBitMask & photonTorpedoCategory) != 0 && (secondBody.categoryBitMask & alienCategory) != 0) {
-            torpedoDidCollideWithTorpedo(torpedoNode: firstBody.node as! SKSpriteNode, alienNode: secondBody.node as! SKSpriteNode )
+            torpedoDidCollideWithAlien(torpedoNode: firstBody.node as! SKSpriteNode, alienNode: secondBody.node as! SKSpriteNode )
+        } else if ((secondBody.categoryBitMask & spaceShipCategory) != 0 && (firstBody.categoryBitMask & alienCategory) != 0) {
+            alienDidEndGame(alienNode: secondBody.node as! SKSpriteNode)
         }
     }
     
-    func torpedoDidCollideWithTorpedo(torpedoNode:SKSpriteNode, alienNode:SKSpriteNode) {
+    func torpedoDidCollideWithAlien(torpedoNode:SKSpriteNode, alienNode:SKSpriteNode) {
         let explosion = SKEmitterNode(fileNamed: "Explosion")!
         explosion.position = alienNode.position
         self.addChild(explosion)
@@ -172,6 +191,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         score += 5
+    }
+    
+    func alienDidEndGame(alienNode:SKSpriteNode) {
+        if (gameTimer != nil) {
+            gameTimer.invalidate()
+        }
+        player.removeFromParent()
+        alienNode.removeFromParent()
+        motionManager.stopAccelerometerUpdates()
+        activeGame = false
+        let explosion = SKEmitterNode(fileNamed: "Explosion")!
+        explosion.position = alienNode.position
+        self.addChild(explosion)
+        SKAction.playSoundFileNamed("explosion.mp3", waitForCompletion: false)
+        
+        let gameOver = SKLabelNode(text: "Game Over\nScore = \(score)")
+        gameOver.numberOfLines = 2
+        gameOver.fontSize = 36
+        gameOver.position = CGPoint(x: 0, y: 0)
+        gameOver.fontName = "AmericanTypewriter-Bold"
+        gameOver.fontColor = UIColor.white
+        gameOver.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.center
+        self.addChild(gameOver)
     }
     
     override func didSimulatePhysics() {
