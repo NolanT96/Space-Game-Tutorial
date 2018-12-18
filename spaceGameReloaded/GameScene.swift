@@ -40,11 +40,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let motionManager = CMMotionManager()
     var xAcceleration:CGFloat = 0
     
+    var torpedoTexture = SKTexture()
+    
     override func didMove(to view: SKView) {
         activeGame = true
         
         height = self.bounds.size.height
         width = self.bounds.size.width
+        
+        //set torpedo image for future use
+        let torpedoImage = UIImage(named: "torpedo")
+        torpedoTexture = SKTexture(image: torpedoImage!)
 
         starfield = SKEmitterNode(fileNamed: "Starfield")
         starfield.position = CGPoint(x: 0, y: (self.view?.frame.maxY)!)
@@ -134,7 +140,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func fireTorpedo(){
         self.run(SKAction.playSoundFileNamed("torpedo.mp3", waitForCompletion: false))
-        let torpedoNode = SKSpriteNode(imageNamed: "torpedo")
+        let torpedoNode = SKSpriteNode(texture: torpedoTexture)
         torpedoNode.size.height = torpedoNode.size.height * 1.5
         torpedoNode.size.width = torpedoNode.size.width * 1.5
         torpedoNode.position = player.position
