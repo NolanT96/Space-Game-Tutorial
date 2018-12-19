@@ -40,7 +40,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let motionManager = CMMotionManager()
     var xAcceleration:CGFloat = 0
     
+    //texture for torpedo
     var torpedoTexture = SKTexture()
+    
+    //sets up the sound effects
+    var torpedoSound = SKAction()
+    var explosionSound = SKAction()
     
     override func didMove(to view: SKView) {
         activeGame = true
@@ -51,13 +56,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //set torpedo image for future use
         let torpedoImage = UIImage(named: "torpedo")
         torpedoTexture = SKTexture(image: torpedoImage!)
-
-        starfield = SKEmitterNode(fileNamed: "Starfield")
-        starfield.position = CGPoint(x: 0, y: (self.view?.frame.maxY)!)
-        starfield.advanceSimulationTime(12)
-        self.addChild(starfield)
         
-        starfield.zPosition = -1
+        //sets sounds for fututre use
+        torpedoSound = SKAction.playSoundFileNamed("torpedo.mp3", waitForCompletion: false)
+        explosionSound = SKAction.playSoundFileNamed("torpedo.mp3", waitForCompletion: false)
+
         
         player = SKSpriteNode(imageNamed: "shuttle")
         player.size.height = player.size.height * 2
@@ -98,6 +101,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 self.xAcceleration = CGFloat(acceleration.x) * 0.75 + self.xAcceleration * 0.25
             }
         }
+        
+        starfield = SKEmitterNode(fileNamed: "Starfield")
+        starfield.position = CGPoint(x: 0, y: (self.view?.frame.maxY)!)
+        starfield.advanceSimulationTime(12)
+        self.addChild(starfield)
+        
+        starfield.zPosition = -1
     }
     
     @objc func addAlien() {
@@ -138,8 +148,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    
+    
     func fireTorpedo(){
-        self.run(SKAction.playSoundFileNamed("torpedo.mp3", waitForCompletion: false))
+        
+        self.run(torpedoSound)
         let torpedoNode = SKSpriteNode(texture: torpedoTexture)
         torpedoNode.size.height = torpedoNode.size.height * 1.5
         torpedoNode.size.width = torpedoNode.size.width * 1.5
@@ -188,7 +201,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let explosion = SKEmitterNode(fileNamed: "Explosion")!
         explosion.position = alienNode.position
         self.addChild(explosion)
-        SKAction.playSoundFileNamed("explosion.mp3", waitForCompletion: false)
+        self.run(explosionSound)
         torpedoNode.removeFromParent()
         alienNode.removeFromParent()
         
@@ -210,8 +223,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let explosion = SKEmitterNode(fileNamed: "Explosion")!
         explosion.position = alienNode.position
         self.addChild(explosion)
-        SKAction.playSoundFileNamed("explosion.mp3", waitForCompletion: false)
-        
+        self.run(explosionSound)
         let gameOver = SKLabelNode(text: "Game Over\nScore = \(score)")
         gameOver.numberOfLines = 2
         gameOver.fontSize = 36
